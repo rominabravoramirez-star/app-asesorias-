@@ -49,6 +49,9 @@
   .precio.cotiza{font-size:20px}
   .chip.gratis{background:#E4EBE3;color:var(--verde)}
   .intro{text-align:center;margin:4px 0 20px}
+  .lanzamiento{background:linear-gradient(135deg,var(--acento),#E89A84);color:#fff;border-radius:16px;padding:12px 16px;
+       text-align:center;font-weight:700;font-size:15px;margin-bottom:22px;box-shadow:0 4px 14px rgba(217,118,95,.3)}
+  .chip.oferta{background:var(--acento);color:#fff}
   .intro h2{font-size:24px;margin-bottom:6px}
   .intro p{font-size:15px;color:var(--suave);max-width:360px;margin:0 auto}
   .packs{border-top:1px solid var(--borde);margin:4px 0 12px}
@@ -145,6 +148,7 @@
   </header>
 
   <main>
+    <div class="lanzamiento oculto" id="lanzamiento"></div>
     <div class="intro">
       <h2>Elige tu servicio</h2>
       <p>Tu primera reunión es <b>gratis</b>: conversamos tu proyecto y te recomiendo el pack ideal para ti.</p>
@@ -272,19 +276,19 @@ const CONFIG = {
       descripcion: "Tus redes siempre activas. Me encargo de tus redes para que tú te dediques a vender.",
       destacado: true,
       packs: [
-        { nombre: "Básico",   detalle: "1 red social, 8 publicaciones al mes", desde: 127500, cobro: "/mes" },
-        { nombre: "Medio",    detalle: "2 redes, 12 a 16 publicaciones, historias y respuesta a mensajes y comentarios", desde: 238000, cobro: "/mes" },
-        { nombre: "Completo", detalle: "Todo lo del Medio + afiches a medida y reporte mensual", desde: 357000, cobro: "/mes" },
+        { nombre: "Básico",   detalle: "1 red social, 8 publicaciones al mes", desde: 125000, cobro: "/mes" },
+        { nombre: "Medio",    detalle: "2 redes, 12 a 16 publicaciones, historias y respuesta a mensajes y comentarios", desde: 240000, cobro: "/mes" },
+        { nombre: "Completo", detalle: "Todo lo del Medio + afiches a medida y reporte mensual", desde: 355000, cobro: "/mes" },
       ],
     },
     {
       nombre: "Publicidad en Facebook e Instagram",
       descripcion: "Anuncios que llegan a tus clientes. Configuro y optimizo tus campañas para que te encuentren más personas.",
       packs: [
-        { nombre: "Meta Impulso",      detalle: "1 campaña, 2 a 3 anuncios, ajuste semanal y reporte mensual", desde: 102000, cobro: "/mes" },
-        { nombre: "Meta Crecimiento",  detalle: "2 campañas, 4 a 6 anuncios y reporte con recomendaciones", desde: 187000, cobro: "/mes" },
-        { nombre: "Meta Tienda",       detalle: "Campaña de ventas para Shopify, píxel y optimización semanal", desde: 272000, cobro: "/mes" },
-        { nombre: "Configuración inicial", detalle: "Cuenta publicitaria, Business Manager, píxel y primera campaña", desde: 51000, hasta: 76500, cobro: "pago único" },
+        { nombre: "Meta Impulso",      detalle: "1 campaña, 2 a 3 anuncios, ajuste semanal y reporte mensual", desde: 100000, cobro: "/mes" },
+        { nombre: "Meta Crecimiento",  detalle: "2 campañas, 4 a 6 anuncios y reporte con recomendaciones", desde: 185000, cobro: "/mes" },
+        { nombre: "Meta Tienda",       detalle: "Campaña de ventas para Shopify, píxel y optimización semanal", desde: 270000, cobro: "/mes" },
+        { nombre: "Configuración inicial", detalle: "Cuenta publicitaria, Business Manager, píxel y primera campaña", desde: 50000, hasta: 75000, cobro: "pago único" },
       ],
       nota: "La inversión en anuncios la pagas aparte, directo a Meta. Si ya tienes el pack Medio o Completo de redes, Meta Impulso queda en $85.000/mes.",
     },
@@ -292,8 +296,8 @@ const CONFIG = {
       nombre: "Tu tienda online en Shopify",
       descripcion: "Tu tienda lista para vender. La creo en Shopify y te enseño a manejarla tú misma.",
       packs: [
-        { nombre: "Tienda básica",   detalle: "Hasta 20 productos, medios de pago y envíos configurados", desde: 212500, hasta: 297500, cobro: "pago único" },
-        { nombre: "Tienda completa", detalle: "Diseño a medida, más productos y capacitación para administrarla", desde: 382500, hasta: 595000, cobro: "pago único" },
+        { nombre: "Tienda básica",   detalle: "Hasta 20 productos, medios de pago y envíos configurados", desde: 210000, hasta: 295000, cobro: "pago único" },
+        { nombre: "Tienda completa", detalle: "Diseño a medida, más productos y capacitación para administrarla", desde: 380000, hasta: 595000, cobro: "pago único" },
       ],
       nota: "La suscripción de Shopify y el dominio los pagas directo.",
     },
@@ -301,8 +305,8 @@ const CONFIG = {
       nombre: "Postulación a fondos concursables",
       descripcion: "¿Quieres postular a un fondo? Te ayudo a armar una postulación ordenada y bien presentada.",
       packs: [
-        { nombre: "Postulación estándar", detalle: "Revisión de bases, formulario, presupuesto, plan de trabajo y acompañamiento (fondos de hasta $5 millones)", desde: 76500, hasta: 153000, cobro: "pago único" },
-        { nombre: "Fondo de monto mayor", detalle: "Postulaciones más largas (por ejemplo Corfo), con más documentación", desde: 212500, cobro: "pago único", prefijo: "desde" },
+        { nombre: "Postulación estándar", detalle: "Revisión de bases, formulario, presupuesto, plan de trabajo y acompañamiento (fondos de hasta $5 millones)", desde: 75000, hasta: 155000, cobro: "pago único" },
+        { nombre: "Fondo de monto mayor", detalle: "Postulaciones más largas (por ejemplo Corfo), con más documentación", desde: 210000, cobro: "pago único", prefijo: "desde" },
       ],
       nota: "Postular no tiene costo: lo que cobro es preparar y ordenar tu postulación.",
     },
@@ -310,12 +314,15 @@ const CONFIG = {
       nombre: "Crea tu empresa y trámites SII",
       descripcion: "Formaliza tu emprendimiento sin enredos y queda lista para emitir boletas y facturas.",
       packs: [
-        { nombre: "Básico",   detalle: "Constitución de empresa, inicio de actividades, acreditación de domicilio y boletas/facturas", desde: 51000, cobro: "pago único" },
-        { nombre: "Completo", detalle: "Todo lo del Básico + apertura de cuenta bancaria y orientación para la patente comercial", desde: 93500, cobro: "pago único" },
+        { nombre: "Básico",   detalle: "Constitución de empresa, inicio de actividades, acreditación de domicilio y boletas/facturas", desde: 50000, cobro: "pago único" },
+        { nombre: "Completo", detalle: "Todo lo del Básico + apertura de cuenta bancaria y orientación para la patente comercial", desde: 95000, cobro: "pago único" },
       ],
       nota: "La firma electrónica y otros gastos externos van aparte.",
     },
   ],
+
+  // 🎉 Aviso de precios de lanzamiento. Para quitarlo, déjalo vacío: lanzamiento: "",
+  lanzamiento: "Precios de lanzamiento: 15% de descuento por tiempo limitado",
 
   notaGeneral: "Precios en pesos chilenos. Los valores en dólares son aproximados.",
 };
@@ -352,6 +359,7 @@ if (CONFIG.instagram) redes += `<a class="btn-red" href="https://instagram.com/$
 if (CONFIG.whatsapp) redes += `<a class="btn-red" href="${linkWsp("¡Hola Romina! Vengo de tu página y tengo una consulta 😊")}" target="_blank" rel="noopener">${iconos.wsp} WhatsApp</a>`;
 $("redes").innerHTML = redes;
 $("nota-general").textContent = CONFIG.notaGeneral;
+if (CONFIG.lanzamiento) { $("lanzamiento").textContent = "🎉 " + CONFIG.lanzamiento; $("lanzamiento").classList.remove("oculto"); }
 $("pie").textContent = `© ${new Date().getFullYear()} ${CONFIG.nombre}`;
 document.title = `${CONFIG.nombre} · Reserva tu asesoría`;
 
@@ -368,7 +376,7 @@ $("servicios").innerHTML = CONFIG.servicios.map((s, i) => `
     ${s.destacado ? '<span class="cinta">Más elegido</span>' : ""}
     <h3>${s.nombre}</h3>
     <p class="desc">${s.descripcion}</p>
-    <div class="chips"><span class="chip gratis">✨ 1ª reunión gratis</span><span class="chip">⏱ ${CONFIG.duracionMin} min</span><span class="chip">💻 Online</span></div>
+    <div class="chips">${CONFIG.lanzamiento ? '<span class="chip oferta">🎉 Lanzamiento -15%</span>' : ""}<span class="chip gratis">✨ 1ª reunión gratis</span><span class="chip">⏱ ${CONFIG.duracionMin} min</span><span class="chip">💻 Online</span></div>
     <div class="packs">${s.packs.map(k => { const pr = precioPack(k); return `
       <div class="pack">
         <div class="pack-top"><b>${k.nombre}</b><span class="pack-precio">${pr.clp}<small>${pr.cobro}</small></span></div>
