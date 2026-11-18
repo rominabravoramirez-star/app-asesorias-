@@ -335,9 +335,26 @@ const CONFIG = {
   //    Un producto sin link no se muestra en la página.
   productos: [
     {
+      tipo: "📘 Ebook · acceso inmediato",
       nombre: "Subsidio DS1 paso a paso 2026 + Calculadora de puntaje",
       descripcion: "Guía práctica para postular al Subsidio DS1 sin enredos, con una calculadora para saber tu puntaje antes de postular.",
       precio: "",            // ej: "$9.990" (opcional)
+      boton: "Comprar en Hotmart",
+      link: "",
+    },
+    {
+      tipo: "📘 Ebook · acceso inmediato",
+      nombre: "Subsidio Fácil Chile® · Guía Completa DS N.º 1",
+      descripcion: "Todo lo que necesitas saber para lograr tu casa propia: el proceso paso a paso, requisitos, documentos y beneficios del subsidio.",
+      precio: "",
+      boton: "Comprar en Hotmart",
+      link: "",
+    },
+    {
+      tipo: "🎓 Curso · acceso inmediato",
+      nombre: "Kit Administrativo PRO: Gestión Total para Emprendedores y PYMES",
+      descripcion: "Plantillas y herramientas para ordenar tu negocio desde el primer día: ventas, gastos, clientes e inventario bajo control.",
+      precio: "",
       boton: "Comprar en Hotmart",
       link: "",
     },
@@ -416,7 +433,7 @@ if (prods.length) {
   $("productos").innerHTML = `<div class="intro"><h2>Productos digitales</h2><p>Aprende a tu ritmo, desde donde estés.</p></div>` +
     prods.map(x => `
     <article class="producto">
-      <span class="tipo">📘 Producto digital · acceso inmediato</span>
+      <span class="tipo">${x.tipo || "Producto digital · acceso inmediato"}</span>
       <h3>${x.nombre}</h3>
       <p>${x.descripcion}</p>
       ${x.precio ? `<div class="precio-prod">${x.precio}</div>` : ""}
