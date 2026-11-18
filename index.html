@@ -52,6 +52,15 @@
   .lanzamiento{background:linear-gradient(135deg,var(--acento),#E89A84);color:#fff;border-radius:16px;padding:12px 16px;
        text-align:center;font-weight:700;font-size:15px;margin-bottom:22px;box-shadow:0 4px 14px rgba(217,118,95,.3)}
   .chip.oferta{background:var(--acento);color:#fff}
+  #productos{margin-top:34px}
+  .producto{background:linear-gradient(135deg,#fff,var(--rosa));border-radius:var(--radio);padding:22px 20px;margin-bottom:16px;
+       box-shadow:var(--sombra);border:1px solid var(--rosa-fuerte)}
+  .producto .tipo{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acento-osc)}
+  .producto h3{font-size:20px;margin:6px 0}
+  .producto p{font-size:14.5px;color:var(--texto);margin-bottom:14px}
+  .producto .precio-prod{font-family:'Playfair Display',serif;font-size:24px;color:var(--verde);font-weight:700;margin-bottom:12px}
+  .btn.btn-hotmart{display:block;text-align:center;text-decoration:none;background:var(--verde);box-shadow:0 4px 14px rgba(47,74,63,.3)}
+  .btn.btn-hotmart:hover{background:#243A31}
   .intro h2{font-size:24px;margin-bottom:6px}
   .intro p{font-size:15px;color:var(--suave);max-width:360px;margin:0 auto}
   .packs{border-top:1px solid var(--borde);margin:4px 0 12px}
@@ -155,6 +164,7 @@
     </div>
     <div id="servicios"></div>
     <p class="nota" id="nota-general"></p>
+    <section id="productos" class="oculto"></section>
   </main>
 
   <footer id="pie"></footer>
@@ -321,6 +331,18 @@ const CONFIG = {
     },
   ],
 
+  // 🛍️ Productos digitales (Hotmart). Pega el link de venta en "link".
+  //    Un producto sin link no se muestra en la página.
+  productos: [
+    {
+      nombre: "Subsidio DS1 paso a paso 2026 + Calculadora de puntaje",
+      descripcion: "Guía práctica para postular al Subsidio DS1 sin enredos, con una calculadora para saber tu puntaje antes de postular.",
+      precio: "",            // ej: "$9.990" (opcional)
+      boton: "Comprar en Hotmart",
+      link: "",
+    },
+  ],
+
   // 🎉 Aviso de precios de lanzamiento. Para quitarlo, déjalo vacío: lanzamiento: "",
   lanzamiento: "Precios de lanzamiento: cerca de 25% de descuento por tiempo limitado",
 
@@ -387,6 +409,21 @@ $("servicios").innerHTML = CONFIG.servicios.map((s, i) => `
     <button class="btn btn-bloque" data-i="${i}">Reservar reunión gratis</button>
   </article>`).join("");
 document.querySelectorAll("#servicios .btn").forEach(b => b.addEventListener("click", () => abrir(+b.dataset.i)));
+
+/* ---- Productos digitales ---- */
+const prods = (CONFIG.productos || []).filter(x => x.link);
+if (prods.length) {
+  $("productos").innerHTML = `<div class="intro"><h2>Productos digitales</h2><p>Aprende a tu ritmo, desde donde estés.</p></div>` +
+    prods.map(x => `
+    <article class="producto">
+      <span class="tipo">📘 Producto digital · acceso inmediato</span>
+      <h3>${x.nombre}</h3>
+      <p>${x.descripcion}</p>
+      ${x.precio ? `<div class="precio-prod">${x.precio}</div>` : ""}
+      <a class="btn btn-hotmart" href="${x.link}" target="_blank" rel="noopener">${x.boton || "Comprar"}</a>
+    </article>`).join("");
+  $("productos").classList.remove("oculto");
+}
 
 /* ---- Utilidades de zona horaria ---- */
 function offsetMin(fecha, tz) {
