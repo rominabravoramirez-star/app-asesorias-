@@ -58,6 +58,7 @@
   .producto .tipo{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--acento-osc)}
   .producto h3{font-size:20px;margin:6px 0}
   .producto p{font-size:14.5px;color:var(--texto);margin-bottom:14px}
+  .producto .precio-prod small{display:block;font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;color:var(--suave)}
   .producto .precio-prod{font-family:'Playfair Display',serif;font-size:24px;color:var(--verde);font-weight:700;margin-bottom:12px}
   .btn.btn-hotmart{display:block;text-align:center;text-decoration:none;background:var(--verde);box-shadow:0 4px 14px rgba(47,74,63,.3)}
   .btn.btn-hotmart:hover{background:#243A31}
@@ -338,7 +339,8 @@ const CONFIG = {
       tipo: "📘 Ebook · acceso inmediato",
       nombre: "Subsidio DS1 paso a paso 2026 + Calculadora de puntaje",
       descripcion: "Guía práctica para postular al Subsidio DS1 sin enredos, con una calculadora para saber tu puntaje antes de postular.",
-      precio: "",            // ej: "$9.990" (opcional)
+      precio: "$9.990",
+      cuotas: "o en 12 cuotas de $833",
       boton: "Comprar en Hotmart",
       link: "https://go.hotmart.com/T108541856S?dp=1",
     },
@@ -346,7 +348,8 @@ const CONFIG = {
       tipo: "📘 Ebook · acceso inmediato",
       nombre: "Subsidio Fácil Chile® · Guía Completa DS N.º 1",
       descripcion: "Todo lo que necesitas saber para lograr tu casa propia: el proceso paso a paso, requisitos, documentos y beneficios del subsidio.",
-      precio: "",
+      precio: "$10.737",
+      cuotas: "o en 12 cuotas de $895",
       boton: "Comprar en Hotmart",
       link: "https://go.hotmart.com/N106657485B?dp=1",
     },
@@ -436,7 +439,7 @@ if (prods.length) {
       <span class="tipo">${x.tipo || "Producto digital · acceso inmediato"}</span>
       <h3>${x.nombre}</h3>
       <p>${x.descripcion}</p>
-      ${x.precio ? `<div class="precio-prod">${x.precio}</div>` : ""}
+      ${x.precio ? `<div class="precio-prod">${x.precio}${x.cuotas ? `<small>${x.cuotas}</small>` : ""}</div>` : ""}
       <a class="btn btn-hotmart" href="${x.link}" target="_blank" rel="noopener">${x.boton || "Comprar"}</a>
     </article>`).join("");
   $("productos").classList.remove("oculto");
