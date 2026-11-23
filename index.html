@@ -256,7 +256,7 @@ const CONFIG = {
   // WhatsApp: solo números, con código de país (56 = Chile)
   whatsapp: "56996872444",
   // Instagram: tu usuario SIN @. Si lo dejas vacío "", el botón no aparece.
-  instagram: "",
+  instagram: "rominabravo.digital",
 
   // Horario de atención (hora de Chile)
   zonaHoraria: "America/Santiago",
@@ -296,6 +296,16 @@ const CONFIG = {
         { nombre: "Medio",    detalle: "2 redes, 12 a 16 publicaciones, historias y respuesta a mensajes y comentarios", desde: 215000, cobro: "/mes" },
         { nombre: "Completo", detalle: "Todo lo del Medio + afiches a medida y reporte mensual", desde: 320000, cobro: "/mes" },
       ],
+    },
+    {
+      nombre: "Asistente de WhatsApp para tu negocio",
+      sinLanzamiento: true,   // sus precios no tienen descuento de lanzamiento
+      descripcion: "Tus clientes te escriben a cualquier hora y preguntan lo mismo. Dejo tu WhatsApp Business respondiendo al tiro, con tu información y en tu forma de hablar, y avisándote cuando necesitas entrar tú.",
+      packs: [
+        { nombre: "Respuestas automáticas", detalle: "Bienvenida con menú de opciones, mensaje de ausencia, respuestas rápidas a preguntas frecuentes y catálogo en WhatsApp", desde: 45000, cobro: "pago único" },
+        { nombre: "Asistente con IA", detalle: "Todo lo anterior + un agente de inteligencia artificial que entiende lo que te preguntan y responde con la información de tu negocio. Lo probamos juntos antes de activarlo", desde: 90000, cobro: "pago único" },
+      ],
+      nota: "Necesitas WhatsApp Business (es gratis; si no lo tienes, te ayudo a pasarte). El Asistente con IA usa la suscripción Meta One de WhatsApp, que pagas directo a Meta: en Chile parte en $7.999 al mes (valor de noviembre de 2026, Meta lo puede cambiar).",
     },
     {
       nombre: "Publicidad en Facebook e Instagram",
@@ -424,7 +434,7 @@ $("servicios").innerHTML = CONFIG.servicios.map((s, i) => `
     ${s.destacado ? '<span class="cinta">Más elegido</span>' : ""}
     <h3>${s.nombre}</h3>
     <p class="desc">${s.descripcion}</p>
-    <div class="chips">${CONFIG.lanzamiento ? '<span class="chip oferta">🎉 Precio de lanzamiento</span>' : ""}<span class="chip gratis">✨ 1ª reunión gratis</span><span class="chip">⏱ ${CONFIG.duracionMin} min</span><span class="chip">💻 Online</span></div>
+    <div class="chips">${CONFIG.lanzamiento && !s.sinLanzamiento ? '<span class="chip oferta">🎉 Precio de lanzamiento</span>' : ""}<span class="chip gratis">✨ 1ª reunión gratis</span><span class="chip">⏱ ${CONFIG.duracionMin} min</span><span class="chip">💻 Online</span></div>
     <div class="packs">${s.packs.map(k => { const pr = precioPack(k); return `
       <div class="pack">
         <div class="pack-top"><b>${k.nombre}</b><span class="pack-precio">${pr.clp}<small>${pr.cobro}</small></span></div>
