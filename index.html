@@ -245,6 +245,9 @@ const CONFIG = {
   // Si no existe, se muestran tus iniciales.
   foto: "foto.jpg",
 
+  // Código privado de FormSubmit: reemplaza tu correo en el envío, así no queda a la vista
+  formsubmitId: "dc921c9a7d65b138b242d05b38e59d39",
+
   // Correo donde te llegan las reservas
   correo: "rominabravoramirez@gmail.com",
 
@@ -624,7 +627,7 @@ $("formulario").addEventListener("submit", async e => {
   const btn = $("enviar");
   btn.disabled = true; btn.textContent = "Enviando...";
   try {
-    const r = await fetch(`https://formsubmit.co/ajax/${CONFIG.correo}`, {
+    const r = await fetch(`https://formsubmit.co/ajax/${CONFIG.formsubmitId || CONFIG.correo}`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify(datos),
