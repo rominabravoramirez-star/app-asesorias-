@@ -247,6 +247,8 @@ const CONFIG = {
 
   // Código privado de FormSubmit: reemplaza tu correo en el envío, así no queda a la vista
   formsubmitId: "dc921c9a7d65b138b242d05b38e59d39",
+  // Clave de Web3Forms (servicio que envía las reservas a tu correo). Si está puesta, se usa en vez de FormSubmit.
+  web3formsKey: "",
 
   // Correo donde te llegan las reservas
   correo: "rominabravoramirez@gmail.com",
@@ -627,11 +629,23 @@ $("formulario").addEventListener("submit", async e => {
   const btn = $("enviar");
   btn.disabled = true; btn.textContent = "Enviando...";
   try {
-    const r = await fetch(`https://formsubmit.co/ajax/${CONFIG.formsubmitId || CONFIG.correo}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify(datos),
-    });
+    let r;
+    if (CONFIG.web3formsKey) {
+      // Web3Forms: envía la reserva a tu correo usando tu clave de acceso
+      const w3 = { access_key: CONFIG.web3formsKey, subject: datos._subject, from_name: "Página de reservas", replyto: correo };
+      Object.keys(datos).forEach(k => { if (!k.startsWith("_")) w3[k] = datos[k]; });
+      r = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(w3),
+      });
+    } else {
+      r = await fetch(`https://formsubmit.co/ajax/${CONFIG.formsubmitId || CONFIG.correo}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(datos),
+      });
+    }
     const j = await r.json().catch(() => ({}));
     if (!r.ok || String(j.success) === "false") {
       const e = new Error(j.message || "error");
