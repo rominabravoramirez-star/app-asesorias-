@@ -630,7 +630,11 @@ $("formulario").addEventListener("submit", async e => {
       body: JSON.stringify(datos),
     });
     const j = await r.json().catch(() => ({}));
-    if (!r.ok || String(j.success) === "false") throw new Error(j.message || "error");
+    if (!r.ok || String(j.success) === "false") {
+      const e = new Error(j.message || "error");
+      e.activacion = /activat/i.test(j.message || "");
+      throw e;
+    }
 
     const fCliente = horaSel.inst.toLocaleDateString("es-CL", { timeZone: TZ_CLIENTE, weekday: "long", day: "numeric", month: "long" });
     const apartado = `Gracias, <b>${nombre.split(" ")[0]}</b>. Apartamos el <b>${fCliente}</b> a las <b>${fmtHora(horaSel.inst, TZ_CLIENTE)} hrs</b> por ${plat}.<br><br>`;
@@ -639,7 +643,10 @@ $("formulario").addEventListener("submit", async e => {
     $("btn-wsp-confirmar").href = linkWsp(msgWsp);
     mostrarPaso(3);
   } catch (ex) {
-    err.innerHTML = `Ups, no se pudo enviar. Revisa tu conexión e inténtalo otra vez, o <a href="${linkWsp("Hola Romina, quiero reservar el " + servicio.nombre)}" target="_blank">escríbeme por WhatsApp</a>.`;
+    const wsp = `<a href="${linkWsp("Hola Romina, quiero reservar una reunión de " + servicio.nombre)}" target="_blank">escríbeme por WhatsApp</a>`;
+    err.innerHTML = ex.activacion
+      ? `Las reservas en línea se están activando en este momento. Por favor ${wsp} y agendamos tu reunión. 💛`
+      : `Ups, no se pudo enviar. Revisa tu conexión e inténtalo otra vez, o ${wsp}.`;
     err.classList.remove("oculto");
   } finally {
     btn.disabled = false; btn.textContent = "Confirmar reserva";
