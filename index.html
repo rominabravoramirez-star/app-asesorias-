@@ -119,6 +119,13 @@
   .idea-actions{display:flex;gap:6px;margin-top:auto}
   .idea-form{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px 14px;margin-bottom:14px}
   .idea-form.open{display:block}
+  .shot{display:flex;gap:10px;align-items:flex-start;padding:8px;border-radius:8px;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--ink)}
+  .shot:hover{background:#fbf9f8}
+  .shot input{width:20px;height:20px;flex:none;margin-top:1px;accent-color:#2ea866}
+  .shot.ok b{text-decoration:line-through;color:var(--muted)}
+  .shot-how{color:var(--muted);font-size:12px;line-height:1.4}
+  .shot-progress{height:8px;background:#ece4df;border-radius:8px;overflow:hidden;margin:14px 0 6px}
+  .shot-progress div{height:100%;background:#2ea866;transition:width .3s}
   .maker{display:none;background:#f7f3f1;border:1px solid var(--line);border-radius:var(--radius);padding:4px 12px 12px;margin-top:10px}
   .maker.open{display:block}
   .maker canvas{width:100%;max-height:380px;object-fit:contain;border-radius:8px;margin-top:12px;background:#ddd;display:block}
@@ -154,6 +161,7 @@
     <button data-view="month">📅 Mes</button>
     <button data-view="week">🗓 Semana</button>
     <button data-view="ideas">💡 Ideas</button>
+    <button data-view="fotos">📸 Fotos</button>
   </div>
   <button id="toggleFilters">☰ Filtros</button>
   <button id="accBtn">👩‍💼 Mis cuentas</button>
@@ -321,6 +329,7 @@ function render(){
   if(view==="month") renderMonth(main);
   else if(view==="week") renderWeek(main);
   else if(view==="ideas") renderIdeas(main);
+  else if(view==="fotos") renderShots(main);
   else renderPipeline(main);
 }
 
@@ -767,6 +776,106 @@ $("#mkUse").onclick=()=>{
   renderImg(); renderPreview(); $("#maker").classList.remove("open"); toast("Imagen agregada al post ✓ Recuerda guardar"); };
 $("#mkSave").onclick=()=>$("#mkCanvas").toBlob(b=>saveImage(b,fileName()),"image/png");
 $("#pvBody").addEventListener("click", e=>{ if(e.target.id==="pvSaveImg" && editing.image) saveImage(dataURLtoBlob(editing.image), fileName().replace(".png",".jpg")); });
+
+/* ============ Lista de fotos ============ */
+const SHOTS = {
+  tusubsidiocl:[
+    ["foto","Tú trabajando con carpetas o en el computador","Que se vea tu cara o tus manos. Genera confianza: la gente ve que hay una persona real detrás."],
+    ["video","Tú explicando un tip mirando a la cámara (30 seg)","Celular en vertical, apoyado a la altura de tus ojos, frente a una ventana. Usa un tip del banco de ideas."],
+    ["foto","Documentos típicos sobre la mesa (sin datos personales)","Libreta de ahorro, carpeta, lápiz. Tapa o difumina cualquier nombre o RUT."],
+    ["foto","Una familia recibiendo las llaves o frente a su casa","Solo con su permiso por escrito. Es la foto que más confianza genera."],
+    ["foto","Fachadas de casas o barrios nuevos de tu zona","Desde la calle, sin personas reconocibles. Sirve de fondo para tus imágenes de texto."],
+  ],
+  gestionhipotecaria:[
+    ["foto","Tus manos con una calculadora y papeles","Plano desde arriba, sobre una mesa ordenada. Ideal de fondo para posts sobre crédito."],
+    ["foto","Unas llaves sobre una mesa o en una mano","Fondo simple. Funciona para casi cualquier post sobre casa propia."],
+    ["video","Tú respondiendo una pregunta frecuente (30 seg)","Ej: \"¿El pie se puede incluir en el crédito?\". Empieza directo con la pregunta."],
+    ["foto","Casas o departamentos de tu zona","Desde afuera, con buena luz de la mañana."],
+  ],
+  "rominabravo.digital":[
+    ["foto","Retrato tuyo sonriendo, de frente","Junto a una ventana, sin flash. Pídele a alguien que la saque a la altura de tus ojos. Será tu foto de perfil y portada."],
+    ["foto","Tú trabajando con el computador o el celular","De costado o desde atrás. Para posts de \"cómo organizo mis redes\"."],
+    ["foto","Tu espacio de trabajo con café","Plano desde arriba: notebook, agenda, taza. Muy usada en marca personal."],
+    ["video","Un día en tu vida: 6 clips de 3 segundos","Café, computador, niños (sin mostrar sus caras si prefieres), trabajo, cierre del día."],
+    ["foto","Tus manos escribiendo en una agenda","Para posts de planificación y organización."],
+  ],
+  agroaguachile:[
+    ["foto","Cada producto por separado, de cerca","Con luz natural y fondo simple (madera o tela). Una foto por producto para tu catálogo."],
+    ["foto","Productos en canasto o caja, recién cosechados","Que se vean frescos: tierra, gotas de agua, hojas verdes."],
+    ["video","El trabajo en el campo (15 seg)","Cosecha, riego o preparación. Graba en vertical y sin hablar: luego le pones música."],
+    ["foto","Manos sosteniendo el producto","Muestra el tamaño real y el trabajo detrás."],
+    ["foto","Paisaje del campo al amanecer o atardecer","La luz dorada hace que todo se vea más lindo. Sirve de fondo para tus imágenes de texto."],
+    ["foto","Un pedido listo para entregar","Para posts de \"disponible esta semana\"."],
+  ],
+  altos_depolcura:[
+    ["foto","La mejor vista del lugar","Amanecer o atardecer. Celular horizontal para Facebook y vertical para historias."],
+    ["video","Recorrido caminando por el lugar (30 seg)","Camina lento, sin girar rápido. Empieza en la entrada y termina en la mejor vista."],
+    ["foto","Detalles de la naturaleza: árboles, río, cerros","Para posts de \"así se vive aquí\"."],
+    ["foto","El acceso y el camino","La gente siempre pregunta cómo se llega. Muéstralo."],
+    ["foto","Lo que hay cerca (pueblo, almacén, paisaje)","Para el post \"Qué hay cerca\" del banco de ideas."],
+  ],
+  sundryshop4:[
+    ["foto","Cada producto sobre fondo blanco","Pon una cartulina blanca junto a una ventana. Una foto de frente y otra de detalle."],
+    ["foto","Producto en uso o en un ambiente","Ej: el producto sobre una mesa decorada, en una mano, en un regalo."],
+    ["video","Empacando un pedido de principio a fin (15 seg)","Vista desde arriba. Es de lo que más se comparte en tiendas pequeñas."],
+    ["foto","Todos los productos nuevos juntos","Para el post \"llegó lo nuevo\". Ordénalos por color o tamaño."],
+    ["foto","Dos productos lado a lado","Para el post \"¿este o este?\"."],
+  ],
+  cabanasrapel:[
+    ["foto","La piscina con sol de mediodía","Es tu foto estrella. Agua limpia, sin cosas tiradas alrededor."],
+    ["foto","Cada cabaña por fuera","Celular a la altura del pecho, de frente o desde una esquina para que se vea más grande."],
+    ["foto","Cada pieza, la cocina y el baño","Camas hechas, luces encendidas, cortinas abiertas. Saca la foto desde una esquina."],
+    ["video","Recorrido de la cabaña (30 seg)","Entrada, living, piezas, terraza y termina en la piscina."],
+    ["foto","Atardecer desde la terraza","Para posts de \"etiqueta con quién vendrías\"."],
+    ["foto","Detalles: quincho, juegos, estacionamiento","Lo que la gente pregunta antes de reservar."],
+  ],
+  carswashpupuya:[
+    ["foto","Antes y después del mismo auto","Desde el mismo lugar y ángulo las dos veces. Es lo que más vende."],
+    ["video","Lavado en cámara rápida (15 seg)","Celular fijo en un lugar; graba todo el lavado y luego lo aceleras."],
+    ["foto","Detalles brillantes: llantas, interior, tablero","De cerca, que se vea el brillo y lo limpio."],
+    ["foto","El local con el letrero","Para que te reconozcan al pasar. Con buena luz de día."],
+    ["foto","Un auto muy sucio llegando","Para el concurso \"el auto más sucio\" y el antes y después."],
+  ],
+};
+const SHOT_TIPS = [
+  "☀️ Saca fotos con luz natural, cerca de una ventana o de día. Nunca con flash.",
+  "🧽 Limpia el lente del celular con tu polera antes de empezar.",
+  "📱 Vertical para historias, reels y TikTok. Para el feed también sirve vertical.",
+  "🔁 Saca 5 o 6 fotos de cada cosa y después eliges la mejor.",
+  "🗓️ Junta todo en una tarde: con 20 buenas fotos tienes contenido para un mes.",
+];
+let shotsDone = (()=>{ try{ return JSON.parse(localStorage.getItem(KEY+"-shots"))||{}; }catch{ return {}; } })();
+let shotBrand = "";
+function saveShots(){ try{ localStorage.setItem(KEY+"-shots",JSON.stringify(shotsDone)); }catch{} }
+
+function renderShots(main){
+  $("#title").textContent = "Fotos para sacar";
+  const list = brands.filter(b=>SHOTS[b.id] && (!shotBrand||b.id===shotBrand));
+  const all = brands.filter(b=>SHOTS[b.id]).flatMap(b=>SHOTS[b.id].map((_,i)=>b.id+":"+i));
+  const done = all.filter(k=>shotsDone[k]).length;
+  const pill=(val,label,color)=>`<button class="net-btn ${shotBrand===val?"on":""}" data-sb="${esc(val)}" style="${shotBrand===val?`background:${color};border-color:${color}`:""}">${label}</button>`;
+  main.innerHTML = `
+  <div class="idea-tip"><b>Antes de empezar:</b><ul style="margin:6px 0 0;padding-left:18px">${SHOT_TIPS.map(t=>`<li>${t}</li>`).join("")}</ul></div>
+  <div class="shot-progress"><div style="width:${all.length?done/all.length*100:0}%"></div></div>
+  <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Llevas <b>${done} de ${all.length}</b> fotos y videos ${done===all.length&&all.length?"🎉":""}</div>
+  <div class="nets" style="margin-bottom:14px">${pill("","Todos","#1f1b1a")}${brands.filter(b=>SHOTS[b.id]).map(b=>pill(b.id,esc(b.name),b.color)).join("")}
+    <div class="spacer"></div><button class="ghost" id="shotReset">Reiniciar lista</button></div>
+  <div class="ideas">${list.map(b=>{ const items=SHOTS[b.id], n=items.filter((_,i)=>shotsDone[b.id+":"+i]).length;
+    return `<div class="idea" style="border-top:4px solid ${b.color}">
+      <div class="idea-top"><span class="brand-tag" style="background:${b.color}">${esc(b.name)}</span><span class="idea-type">${n}/${items.length} listas</span></div>
+      ${items.map(([kind,what,how],i)=>{ const k=b.id+":"+i, ok=!!shotsDone[k];
+        return `<label class="shot ${ok?"ok":""}"><input type="checkbox" data-shot="${k}" ${ok?"checked":""}>
+          <span><b>${kind==="video"?"🎬":"📷"} ${esc(what)}</b><br><span class="shot-how">${esc(how)}</span></span></label>`; }).join("")}
+    </div>`; }).join("")}</div>`;
+}
+$("#main").addEventListener("click", e=>{
+  if(view!=="fotos") return;
+  const sb=e.target.closest("[data-sb]"); if(sb){ shotBrand=sb.dataset.sb; render(); return; }
+  if(e.target.id==="shotReset"){ const b=e.target; if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="¿Segura? Toca otra vez"; setTimeout(()=>{b.dataset.sure="";b.textContent="Reiniciar lista";},3000); return; }
+    shotsDone={}; saveShots(); render(); }
+});
+$("#main").addEventListener("change", e=>{ const k=e.target.dataset && e.target.dataset.shot; if(view!=="fotos"||!k) return;
+  if(e.target.checked) shotsDone[k]=1; else delete shotsDone[k]; saveShots(); render(); });
 
 // Mis cuentas
 function renderAccounts(){
