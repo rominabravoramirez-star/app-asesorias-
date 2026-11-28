@@ -90,6 +90,13 @@
   .custom-box textarea{min-height:90px}
   .pubrow{display:flex;align-items:center;justify-content:space-between;max-width:420px;margin:10px auto 0;gap:8px}
   .hash{color:#1d72b8}
+  .brand-tag{font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;color:#fff;white-space:nowrap;flex:none}
+  .accounts{display:none;padding:12px 18px;background:var(--card);border-bottom:1px solid var(--line)}
+  .accounts.open{display:block}
+  .acc-row{display:grid;grid-template-columns:34px 1.3fr 1fr 1fr 34px;gap:6px;align-items:center;margin-bottom:6px}
+  .acc-row input[type=color]{padding:2px;height:34px}
+  .acc-head{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+  @media (max-width:820px){.acc-row{grid-template-columns:34px 1fr 1fr}.acc-row .fbc,.acc-row .acc-del{grid-column:auto}.acc-head{display:none}}
 
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 16px;border-radius:10px;opacity:0;transition:.25s;z-index:30;pointer-events:none}
   .toast.show{opacity:1}
@@ -128,10 +135,18 @@
     <button data-view="week">🗓 Semana</button>
   </div>
   <button id="toggleFilters">☰ Filtros</button>
+  <button id="accBtn">👩‍💼 Mis cuentas</button>
   <button id="menuBtn" title="Copia de seguridad">⋯</button>
   <button class="primary" id="newBtn">+ Nuevo</button>
 </header>
 <div class="filters" id="filters"></div>
+<div class="accounts" id="accounts">
+  <div style="font-weight:700;margin-bottom:4px">Mis emprendimientos</div>
+  <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Revisa que el usuario de Instagram y el nombre de la página de Facebook estén correctos. Los cambios se guardan solos.</div>
+  <div class="acc-row acc-head"><span></span><span>Nombre</span><span>Instagram</span><span>Facebook</span><span></span></div>
+  <div id="accList"></div>
+  <button id="accAdd">+ Agregar emprendimiento</button>
+</div>
 <div class="filters" id="backup">
   <span style="align-self:center;color:var(--muted);font-size:12px">Copia de seguridad de tus posts:</span>
   <button id="bkDownload">⬇️ Descargar archivo</button>
@@ -155,6 +170,9 @@
       <label>Imagen (opcional)</label>
       <input type="file" id="fImg" accept="image/*">
       <div class="imgprev" id="fImgPrev"></div>
+
+      <label>Emprendimiento</label>
+      <select id="fBrand"></select>
 
       <label>Redes donde se publica</label>
       <div class="nets" id="fNets"></div>
@@ -215,6 +233,18 @@ let posts = load();
 let view = localStorage.getItem(KEY+"-view") || "month";
 let cursor = new Date(); cursor.setHours(0,0,0,0);
 let activeFilters = new Set(Object.keys(NETWORKS));
+const DEFAULT_BRANDS = [
+  {id:"agroaguachile", name:"Agro Aguachile", ig:"agroaguachile", fb:"agroaguachile", color:"#3f8f4e"},
+  {id:"tusubsidiocl", name:"Tu Subsidio CL", ig:"tusubsidiocl", fb:"tusubsidiocl", color:"#2d6cdf"},
+  {id:"rominabravo.digital", name:"Romina Bravo Digital", ig:"rominabravo.digital", fb:"rominabravo.digital", color:"#e2725b"},
+  {id:"altos_depolcura", name:"Altos de Polcura", ig:"altos_depolcura", fb:"altos_depolcura", color:"#8a5a3c"},
+  {id:"sundryshop4", name:"Sundry Shop", ig:"sundryshop4", fb:"sundryshop4", color:"#b04fc4"},
+];
+let brands = (()=>{ try{ return JSON.parse(localStorage.getItem(KEY+"-brands")) || DEFAULT_BRANDS; }catch{ return DEFAULT_BRANDS; } })();
+function saveBrands(){ try{ localStorage.setItem(KEY+"-brands", JSON.stringify(brands)); }catch{} }
+let activeBrands = new Set(brands.map(b=>b.id).concat(""));
+const brandOf = p => brands.find(b=>b.id===p.brand);
+const handleFor = (b, net) => { if(!b) return "Mi emprendimiento"; const h = net==="facebook" ? b.fb : b.ig; return h ? (net==="facebook" ? h : "@"+h.replace(/^@/,"")) : b.name; };
 let editing = null;   // copia del post en edición
 let pvTab = null;
 
@@ -231,7 +261,7 @@ const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
 function textFor(p, net){ return (p.custom && p.custom[net]) || p.text || ""; }
 function snippet(p){ return (p.text||"").split("\n")[0].slice(0,60) || "(sin texto)"; }
-function visible(p){ return p.networks.length===0 || p.networks.some(n=>activeFilters.has(n)); }
+function visible(p){ return activeBrands.has(brandOf(p)?p.brand:"") && (p.networks.length===0 || p.networks.some(n=>activeFilters.has(n))); }
 function postsOn(dateStr){ return posts.filter(p=>p.date===dateStr && visible(p)).sort((a,b)=>(a.time||"").localeCompare(b.time||"")); }
 function startOfWeek(d){ const x=new Date(d); const w=(x.getDay()+6)%7; x.setDate(x.getDate()-w); return x; }
 
@@ -246,7 +276,8 @@ function render(){
 
 function chipHTML(p){
   const dots = p.networks.map(n=>`<span class="dot" style="background:${NETWORKS[n].color}" title="${NETWORKS[n].name}"></span>`).join("");
-  return `<div class="chip" data-id="${p.id}">
+  const b = brandOf(p);
+  return `<div class="chip" data-id="${p.id}" style="${b?`border-left:4px solid ${b.color}`:""}" title="${b?esc(b.name):""}">
     <span class="status-dot" style="background:${STATUS[p.status].color}"></span>
     ${p.image?`<img src="${p.image}" alt="">`:""}
     <span class="t">${esc(snippet(p))}<br><span class="time">${p.time||""}</span></span>
@@ -298,8 +329,9 @@ function renderPipeline(main){
   main.innerHTML = `<div class="pipe">` + Object.entries(STATUS).map(([k,s])=>{
     const list = sorted.filter(p=>p.status===k);
     return `<div class="col"><h3><span>${s.label}</span><span>${list.length}</span></h3>
-      ${list.map(p=>`<div class="card" data-id="${p.id}">
+      ${list.map(p=>`<div class="card" data-id="${p.id}" style="${brandOf(p)?`border-left:4px solid ${brandOf(p).color}`:""}">
         ${p.image?`<img src="${p.image}" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px;margin-bottom:6px">`:""}
+        ${brandOf(p)?`<span class="brand-tag" style="background:${brandOf(p).color}">${esc(brandOf(p).name)}</span>`:""}
         <div>${esc((p.text||"(sin texto)").slice(0,120))}</div>
         <div class="meta"><span>${p.date?`${p.date} ${p.time||""}`:"Sin fecha"}</span>
         <span class="dots">${p.networks.map(n=>`<span class="dot" style="background:${NETWORKS[n].color}"></span>`).join("")}</span></div>
@@ -312,7 +344,8 @@ function renderPipeline(main){
 function openEditor(post, dateStr){
   editing = post ? JSON.parse(JSON.stringify(post)) : {
     id:null, text:"", image:null, networks:["instagram","facebook"],
-    date: dateStr || ymd(new Date()), time:"10:00", status:"scheduled", custom:{}, done:{}
+    date: dateStr || ymd(new Date()), time:"10:00", status:"scheduled", custom:{}, done:{},
+    brand: localStorage.getItem(KEY+"-lastBrand") || (brands[0]&&brands[0].id) || ""
   };
   editing.custom ||= {}; editing.done ||= {};
   $("#mTitle").textContent = post ? "Editar post" : "Nuevo post";
@@ -320,6 +353,8 @@ function openEditor(post, dateStr){
   $("#fDate").value = editing.date || "";
   $("#fTime").value = editing.time || "";
   $("#fStatus").value = editing.status;
+  $("#fBrand").innerHTML = `<option value="">— Sin emprendimiento —</option>` + brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)} (@${esc(b.ig)})</option>`).join("");
+  $("#fBrand").value = brandOf(editing) ? editing.brand : "";
   $("#fImg").value = "";
   $("#delBtn").style.display = post ? "" : "none";
   $("#dupBtn").style.display = post ? "" : "none";
@@ -364,7 +399,8 @@ function renderPreview(){
   const when = editing.date ? new Date(editing.date+"T"+(editing.time||"00:00")).toLocaleString("es",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "Sin fecha";
   const img = editing.image ? `<img class="pv-img" src="${editing.image}">` : `<div class="pv-img ph">Sin imagen</div>`;
   const textBlock = `<div class="pv-text">${highlight(txt, n.limit)}</div>`;
-  const head = `<div class="pv-head"><div class="avatar"></div><div><div class="pv-name">Mi emprendimiento</div><div class="pv-sub">${n.name} · ${when}</div></div></div>`;
+  const br = brandOf(editing);
+  const head = `<div class="pv-head"><div class="avatar" style="${br?`background:${br.color}`:""}"></div><div><div class="pv-name">${esc(handleFor(br,k))}</div><div class="pv-sub">${n.name} · ${when}</div></div></div>`;
   // Orden imagen/texto según la red
   const imageFirst = ["instagram","tiktok","pinterest","youtube"].includes(k);
   let card = `<div class="preview" style="border-top:4px solid ${n.color}">${head}${imageFirst?img+textBlock:textBlock+(editing.image?img:"")}</div>`;
@@ -389,6 +425,7 @@ function readForm(){
   editing.date = $("#fDate").value;
   editing.time = $("#fTime").value;
   editing.status = $("#fStatus").value;
+  editing.brand = $("#fBrand").value;
 }
 
 function resizeImage(file){
@@ -418,18 +455,42 @@ $("#newBtn").onclick=()=>openEditor(null);
 
 // Filtros
 function renderFilters(){
-  $("#filters").innerHTML = Object.entries(NETWORKS).map(([k,n])=>{
+  $("#filters").innerHTML = brands.map(b=>{
+    const on=activeBrands.has(b.id);
+    return `<button class="net-btn ${on?"on":""}" data-brand="${esc(b.id)}" style="${on?`background:${b.color};border-color:${b.color}`:""}">${esc(b.name)}</button>`;
+  }).join("") + `<span style="width:100%;height:0"></span>` + Object.entries(NETWORKS).map(([k,n])=>{
     const on=activeFilters.has(k);
     return `<button class="net-btn ${on?"on":""}" data-filter="${k}" style="${on?`background:${n.color};border-color:${n.color}`:""}">${n.icon} ${n.name}</button>`;
   }).join("");
 }
 $("#toggleFilters").onclick=()=>$("#filters").classList.toggle("open");
-$("#filters").onclick=e=>{ const b=e.target.closest("[data-filter]"); if(!b) return;
+$("#filters").onclick=e=>{
+  const br=e.target.closest("[data-brand]");
+  if(br){ const k=br.dataset.brand; activeBrands.has(k)?activeBrands.delete(k):activeBrands.add(k); renderFilters(); render(); return; }
+  const b=e.target.closest("[data-filter]"); if(!b) return;
   const k=b.dataset.filter; activeFilters.has(k)?activeFilters.delete(k):activeFilters.add(k); renderFilters(); render(); };
+
+// Mis cuentas
+function renderAccounts(){
+  $("#accList").innerHTML = brands.map((b,i)=>`<div class="acc-row" data-i="${i}">
+    <input type="color" data-f="color" value="${esc(b.color)}" title="Color">
+    <input data-f="name" value="${esc(b.name)}" placeholder="Nombre">
+    <input data-f="ig" value="${esc(b.ig)}" placeholder="usuario de Instagram">
+    <input class="fbc" data-f="fb" value="${esc(b.fb)}" placeholder="página de Facebook">
+    <button class="acc-del ghost" data-del="${i}" title="Quitar">✕</button></div>`).join("");
+}
+$("#accBtn").onclick=()=>{ renderAccounts(); $("#accounts").classList.toggle("open"); };
+$("#accList").addEventListener("input", e=>{ const row=e.target.closest("[data-i]"); if(!row) return;
+  let v=e.target.value; if(e.target.dataset.f==="ig") v=v.replace(/^@/,"").trim();
+  brands[row.dataset.i][e.target.dataset.f]=v; saveBrands(); renderFilters(); render(); });
+$("#accList").addEventListener("click", e=>{ const d=e.target.closest("[data-del]"); if(!d) return;
+  if(!d.dataset.sure){ d.dataset.sure="1"; d.textContent="¿?"; setTimeout(()=>{d.dataset.sure="";d.textContent="✕";},3000); return; }
+  brands.splice(+d.dataset.del,1); saveBrands(); renderAccounts(); renderFilters(); render(); });
+$("#accAdd").onclick=()=>{ const id="b"+uid(); brands.push({id,name:"Nuevo emprendimiento",ig:"",fb:"",color:"#888888"}); activeBrands.add(id); saveBrands(); renderAccounts(); renderFilters(); };
 
 // Editor
 $("#fText").addEventListener("input", ()=>{ readForm(); updateCount(); renderPreview(); });
-["#fDate","#fTime","#fStatus"].forEach(s=>$(s).addEventListener("change", ()=>{ readForm(); renderPreview(); }));
+["#fDate","#fTime","#fStatus","#fBrand"].forEach(s=>$(s).addEventListener("change", ()=>{ readForm(); renderPreview(); }));
 $("#fNets").onclick=e=>{ const b=e.target.closest("[data-net]"); if(!b) return; const k=b.dataset.net;
   editing.networks = editing.networks.includes(k) ? editing.networks.filter(x=>x!==k) : [...editing.networks,k];
   if(editing.networks.includes(k)) pvTab=k; renderNets(); renderPreview(); };
@@ -457,6 +518,7 @@ $("#pvBody").addEventListener("click", async e=>{
 $("#saveBtn").onclick=()=>{
   readForm();
   if(!editing.text.trim() && !editing.image){ toast("Escribe algo o sube una imagen"); return; }
+  if(editing.brand) localStorage.setItem(KEY+"-lastBrand", editing.brand);
   if(editing.id){ posts = posts.map(p=>p.id===editing.id?editing:p); }
   else { editing.id=uid(); posts.push(editing); }
   if(editing.date){ cursor = new Date(editing.date+"T00:00"); }
@@ -487,9 +549,9 @@ $("#importFile").onchange=async e=>{ const f=e.target.files[0]; if(!f) return;
 if(!posts.length && !localStorage.getItem(KEY+"-seeded")){
   const t=new Date(), add=n=>{ const d=new Date(t); d.setDate(d.getDate()+n); return ymd(d); };
   posts = [
-    {id:uid(),text:"¡Buenos días! ☀️ Hoy les cuento cómo empecé mi emprendimiento siendo mamá de dos 💛\n\n#emprendimiento #mamaemprendedora",networks:["instagram","facebook","threads"],date:add(0),time:"09:30",status:"scheduled",custom:{},done:{},image:null},
-    {id:uid(),text:"3 errores que cometí al empezar en redes (y cómo los solucioné) 👇",networks:["instagram","tiktok","x"],date:add(2),time:"19:00",status:"idea",custom:{},done:{},image:null},
-    {id:uid(),text:"Gracias a todas por el cariño de esta semana 🙏",networks:["facebook"],date:add(-2),time:"20:00",status:"published",custom:{},done:{facebook:true},image:null},
+    {id:uid(),text:"¡Buenos días! ☀️ Hoy les cuento cómo empecé mi emprendimiento siendo mamá de dos 💛\n\n#emprendimiento #mamaemprendedora",brand:"rominabravo.digital",networks:["instagram","facebook","threads"],date:add(0),time:"09:30",status:"scheduled",custom:{},done:{},image:null},
+    {id:uid(),text:"¿Sabías que puedes postular a un subsidio habitacional? Te explico los pasos 👇",brand:"tusubsidiocl",networks:["instagram","facebook"],date:add(2),time:"19:00",status:"idea",custom:{},done:{},image:null},
+    {id:uid(),text:"Gracias a todas por el cariño de esta semana 🙏",brand:"agroaguachile",networks:["facebook"],date:add(-2),time:"20:00",status:"published",custom:{},done:{facebook:true},image:null},
   ];
   localStorage.setItem(KEY+"-seeded","1"); save();
 }
