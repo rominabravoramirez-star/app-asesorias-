@@ -235,12 +235,23 @@ let cursor = new Date(); cursor.setHours(0,0,0,0);
 let activeFilters = new Set(Object.keys(NETWORKS));
 const DEFAULT_BRANDS = [
   {id:"agroaguachile", name:"Agro Aguachile", ig:"agroaguachile", fb:"agroaguachile", color:"#3f8f4e"},
-  {id:"tusubsidiocl", name:"Tu Subsidio CL", ig:"tusubsidiocl", fb:"tusubsidiocl", color:"#2d6cdf"},
+  {id:"tusubsidiocl", name:"Tu Subsidio CL", ig:"tusubsidiocl", fb:"Tusubsidiocl Cl", color:"#2d6cdf"},
   {id:"rominabravo.digital", name:"Romina Bravo Digital", ig:"rominabravo.digital", fb:"rominabravo.digital", color:"#e2725b"},
-  {id:"altos_depolcura", name:"Altos de Polcura", ig:"altos_depolcura", fb:"altos_depolcura", color:"#8a5a3c"},
-  {id:"sundryshop4", name:"Sundry Shop", ig:"sundryshop4", fb:"sundryshop4", color:"#b04fc4"},
+  {id:"altos_depolcura", name:"Altos de Polcura", ig:"altos_depolcura", fb:"Altos De Polcura", color:"#8a5a3c"},
+  {id:"sundryshop4", name:"Sundry Shop", ig:"sundryshop4", fb:"Sundry Sundry", color:"#b04fc4"},
+  {id:"gestionhipotecaria", name:"Gestión Hipotecaria", ig:"", fb:"Gestión Hipotecaria", color:"#e0531f"},
+  {id:"cabanasrapel", name:"Cabañas Rapel Navidad", ig:"", fb:"Cabanas Rapel Navidad", color:"#1fa3c9"},
+  {id:"carswashpupuya", name:"Cars Wash Pupuya", ig:"", fb:"Cars Wash Pupuya", color:"#d4a017"},
 ];
+const BRANDS_VERSION = 2;
 let brands = (()=>{ try{ return JSON.parse(localStorage.getItem(KEY+"-brands")) || DEFAULT_BRANDS; }catch{ return DEFAULT_BRANDS; } })();
+// Actualiza cuentas guardadas con los datos nuevos sin pisar lo que ya editaste
+if((+localStorage.getItem(KEY+"-brandsv")||1) < BRANDS_VERSION){
+  DEFAULT_BRANDS.forEach(d=>{ const b=brands.find(x=>x.id===d.id);
+    if(!b) brands.push({...d});
+    else if(!b.fb || b.fb===b.ig) b.fb=d.fb; });
+  try{ localStorage.setItem(KEY+"-brands", JSON.stringify(brands)); localStorage.setItem(KEY+"-brandsv", BRANDS_VERSION); }catch{}
+}
 function saveBrands(){ try{ localStorage.setItem(KEY+"-brands", JSON.stringify(brands)); }catch{} }
 let activeBrands = new Set(brands.map(b=>b.id).concat(""));
 const brandOf = p => brands.find(b=>b.id===p.brand);
@@ -353,7 +364,7 @@ function openEditor(post, dateStr){
   $("#fDate").value = editing.date || "";
   $("#fTime").value = editing.time || "";
   $("#fStatus").value = editing.status;
-  $("#fBrand").innerHTML = `<option value="">— Sin emprendimiento —</option>` + brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)} (@${esc(b.ig)})</option>`).join("");
+  $("#fBrand").innerHTML = `<option value="">— Sin emprendimiento —</option>` + brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}${b.ig?` (@${esc(b.ig)})`:" (solo Facebook)"}</option>`).join("");
   $("#fBrand").value = brandOf(editing) ? editing.brand : "";
   $("#fImg").value = "";
   $("#delBtn").style.display = post ? "" : "none";
