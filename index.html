@@ -132,6 +132,12 @@
   <button class="primary" id="newBtn">+ Nuevo</button>
 </header>
 <div class="filters" id="filters"></div>
+<div class="filters" id="backup">
+  <span style="align-self:center;color:var(--muted);font-size:12px">Copia de seguridad de tus posts:</span>
+  <button id="bkDownload">⬇️ Descargar archivo</button>
+  <button id="bkCopy">📋 Copiar como texto</button>
+  <button id="bkLoad">⬆️ Cargar desde archivo</button>
+</div>
 
 <main id="main"></main>
 
@@ -458,19 +464,18 @@ $("#saveBtn").onclick=()=>{
 };
 $("#dupBtn").onclick=()=>{ readForm(); const c={...JSON.parse(JSON.stringify(editing)), id:uid(), done:{}, status:"idea"};
   posts.push(c); save(); render(); openEditor(c); toast("Copia creada: cambia la fecha y guarda"); };
-$("#delBtn").onclick=()=>{ if(!confirm("¿Eliminar este post?")) return; posts=posts.filter(p=>p.id!==editing.id); save(); closeEditor(); render(); toast("Eliminado"); };
+$("#delBtn").onclick=()=>{ const b=$("#delBtn"); if(!b.dataset.sure){ b.dataset.sure="1"; b.textContent="¿Segura? Toca otra vez"; setTimeout(()=>{b.dataset.sure="";b.textContent="Eliminar";},3000); return; } b.dataset.sure=""; b.textContent="Eliminar"; posts=posts.filter(p=>p.id!==editing.id); save(); closeEditor(); render(); toast("Eliminado"); };
 $("#cancelBtn").onclick=closeEditor;
 $("#overlay").onclick=e=>{ if(e.target.id==="overlay") closeEditor(); };
 document.addEventListener("keydown", e=>{ if(e.key==="Escape" && editing) closeEditor(); });
 
 // Copias de seguridad
-$("#menuBtn").onclick=()=>{
-  const op = prompt("Copia de seguridad:\n1 = Descargar mis posts\n2 = Cargar posts desde un archivo\n\nEscribe 1 o 2:");
-  if(op==="1"){ const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([JSON.stringify(posts,null,1)],{type:"application/json"}));
-    a.download=`mis-posts-${ymd(new Date())}.json`; a.click(); toast("Archivo descargado ✓"); }
-  else if(op==="2") $("#importFile").click();
-};
+$("#menuBtn").onclick=()=>$("#backup").classList.toggle("open");
+$("#bkDownload").onclick=()=>{ const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(posts,null,1)],{type:"application/json"}));
+  a.download=`mis-posts-${ymd(new Date())}.json`; a.click(); toast("Descargando copia ✓"); };
+$("#bkCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(JSON.stringify(posts)); toast("Copia copiada ✓ Pégala en tus notas o un correo"); }catch{ toast("No se pudo copiar"); } };
+$("#bkLoad").onclick=()=>$("#importFile").click();
 $("#importFile").onchange=async e=>{ const f=e.target.files[0]; if(!f) return;
   try{ const data=JSON.parse(await f.text()); if(!Array.isArray(data)) throw 0;
     const ids=new Set(posts.map(p=>p.id)); data.forEach(p=>{ if(p&&p.id&&!ids.has(p.id)) posts.push(p); });
