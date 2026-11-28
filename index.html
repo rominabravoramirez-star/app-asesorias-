@@ -21,7 +21,8 @@
   label{font-size:12px;color:var(--muted);display:block;margin:12px 0 4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 
   header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 18px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-  header h1{font-size:18px;margin:0 8px 0 0;min-width:170px;text-transform:capitalize}
+  header h1{font-size:18px;margin:0 8px 0 0;min-width:170px}
+  header h1::first-letter{text-transform:uppercase}
   .spacer{flex:1}
   .seg{display:flex;gap:4px}
   main{padding:16px 18px}
@@ -106,6 +107,17 @@
 
   .legend{display:flex;gap:14px;font-size:12px;color:var(--muted);margin-bottom:10px;flex-wrap:wrap}
   .legend span{display:flex;align-items:center;gap:5px}
+  .idea-tip{background:var(--accent-soft);border:1px solid #f3cfc5;border-radius:var(--radius);padding:12px 14px;line-height:1.5}
+  .ideas{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+  .idea{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:8px}
+  .idea.used{opacity:.6}
+  .idea-top{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .idea-type{font-size:11px;color:var(--muted);font-weight:600}
+  .idea-title{font-weight:700;font-size:15px}
+  .idea-text{white-space:pre-wrap;font-size:13px;line-height:1.45;color:#4a413e;max-height:180px;overflow:auto;background:#fbf9f8;border-radius:8px;padding:8px}
+  .idea-actions{display:flex;gap:6px;margin-top:auto}
+  .idea-form{display:none;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:4px 14px 14px;margin-bottom:14px}
+  .idea-form.open{display:block}
 
   @media (max-width:820px){
     .modal{grid-template-columns:1fr}
@@ -133,6 +145,7 @@
     <button data-view="pipeline">▦ Pipeline</button>
     <button data-view="month">📅 Mes</button>
     <button data-view="week">🗓 Semana</button>
+    <button data-view="ideas">💡 Ideas</button>
   </div>
   <button id="toggleFilters">☰ Filtros</button>
   <button id="accBtn">👩‍💼 Mis cuentas</button>
@@ -279,9 +292,11 @@ function startOfWeek(d){ const x=new Date(d); const w=(x.getDay()+6)%7; x.setDat
 /* ============ Render principal ============ */
 function render(){
   document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("active", b.dataset.view===view));
+  ["#prev","#next","#today"].forEach(s=>$(s).style.visibility = (view==="month"||view==="week") ? "" : "hidden");
   const main = $("#main");
   if(view==="month") renderMonth(main);
   else if(view==="week") renderWeek(main);
+  else if(view==="ideas") renderIdeas(main);
   else renderPipeline(main);
 }
 
@@ -481,6 +496,126 @@ $("#filters").onclick=e=>{
   const b=e.target.closest("[data-filter]"); if(!b) return;
   const k=b.dataset.filter; activeFilters.has(k)?activeFilters.delete(k):activeFilters.add(k); renderFilters(); render(); };
 
+/* ============ Banco de ideas ============ */
+const IDEA_TYPES = {
+  educar:{label:"Enseñar", icon:"🎓", tip:"Resuelve una duda de tu cliente"},
+  conectar:{label:"Conectar", icon:"💛", tip:"Muestra quién está detrás"},
+  vender:{label:"Vender", icon:"🛒", tip:"Invita a comprar o contactar"},
+  interactuar:{label:"Conversar", icon:"💬", tip:"Haz que te comenten"},
+};
+const IDEAS = [
+  // Tu Subsidio CL
+  {b:"tusubsidiocl",t:"educar",title:"Requisitos básicos para postular",text:"¿Quieres postular a un subsidio habitacional y no sabes por dónde empezar? 🏡\n\nEstos son los primeros pasos:\n1️⃣ Tener tu Registro Social de Hogares al día\n2️⃣ Tener una cuenta de ahorro para la vivienda\n3️⃣ Revisar qué subsidio se ajusta a tu caso\n\n¿Tienes dudas? Escríbenos y te orientamos 💬\n\n#subsidiohabitacional #casapropia #chile"},
+  {b:"tusubsidiocl",t:"educar",title:"Mitos sobre el subsidio",text:"❌ MITO: \"Si gano un sueldo normal no puedo postular\"\n✅ REALIDAD: hay subsidios pensados para distintos tramos de ingresos.\n\nCada caso es distinto. Cuéntanos el tuyo y revisamos tus opciones sin compromiso 🙌\n\n#subsidio #viviendapropia #asesoria"},
+  {b:"tusubsidiocl",t:"educar",title:"Errores que te dejan fuera",text:"3 errores comunes que dejan a las familias fuera de la postulación 😥\n\n• Dejar el ahorro para última hora\n• No actualizar el Registro Social de Hogares\n• Entregar documentos incompletos\n\nGuarda este post para no olvidarlo 📌\n\n#subsidiohabitacional #tips"},
+  {b:"tusubsidiocl",t:"conectar",title:"Historia de una familia que cumplió su sueño",text:"Hoy queremos contarles la historia de ___ 🏠\n\nLlegaron con muchas dudas y hoy ya tienen las llaves de su casa propia. Acompañarlos en este proceso fue un orgullo para nosotros 💙\n\n(Pide permiso a la familia antes de publicar su foto)\n\n#casapropia #sueñocumplido"},
+  {b:"tusubsidiocl",t:"vender",title:"Agenda tu asesoría",text:"¿Este año sí vas por tu casa propia? 🏡✨\n\nTe acompañamos en todo el proceso de postulación: revisamos tus documentos, tu ahorro y el subsidio que más te conviene.\n\n📩 Escríbenos por mensaje directo y agenda tu asesoría.\n\n#subsidiohabitacional #asesoria"},
+  {b:"tusubsidiocl",t:"interactuar",title:"Pregunta abierta",text:"Cuéntanos en los comentarios 👇\n\n¿Qué es lo que más te complica de postular a un subsidio?\n\nA) Juntar el ahorro\nB) Los documentos\nC) No sé qué subsidio me corresponde\n\nResponderemos todas las dudas 💬"},
+
+  // Gestión Hipotecaria
+  {b:"gestionhipotecaria",t:"educar",title:"¿Qué es el leasing habitacional?",text:"¿Has escuchado hablar del leasing habitacional? 🏠\n\nEs una forma de llegar a tu vivienda pagando un arriendo que se va abonando a la compra. Puede ser una buena alternativa si te cuesta acceder a un crédito tradicional.\n\n¿Quieres saber si te sirve? Escríbenos 📩\n\n#leasinghabitacional #creditohipotecario"},
+  {b:"gestionhipotecaria",t:"educar",title:"Subsidio + crédito: cómo se combinan",text:"¿Sabías que el subsidio habitacional se puede complementar con un crédito hipotecario? 💡\n\nTe explicamos cómo funciona en tu caso y te ayudamos con todo el trámite.\n\n💬 Consulta sin compromiso por mensaje.\n\n#subsidio #creditohipotecario #casapropia"},
+  {b:"gestionhipotecaria",t:"educar",title:"Qué revisa el banco antes de aprobar",text:"Antes de pedir un crédito hipotecario, revisa esto 👇\n\n✔️ Tu historial de deudas\n✔️ Tu estabilidad laboral\n✔️ Cuánto puedes pagar al mes sin ahogarte\n\nNosotros te ayudamos a preparar tu carpeta para llegar mejor preparado/a 💪"},
+  {b:"gestionhipotecaria",t:"vender",title:"El pie incluido en el crédito",text:"¿El pie es lo que te frena? 🤔\n\nEn algunos casos el 5% de pie se puede incluir en el crédito. Revisemos juntos si aplica para ti.\n\n📩 Escríbenos y te contamos cómo.\n\n#creditohipotecario #pie #viviendapropia"},
+  {b:"gestionhipotecaria",t:"interactuar",title:"Encuesta: arrendar o comprar",text:"Pregunta del día 🏠\n\n¿Qué prefieres?\n🔵 Seguir arrendando\n🟠 Pagar un dividendo por algo tuyo\n\nCuéntanos en los comentarios y por qué 👇"},
+
+  // Romina Bravo Digital
+  {b:"rominabravo.digital",t:"conectar",title:"Cómo empecé siendo mamá",text:"Nadie me dijo que emprender siendo mamá de dos sería tan desafiante… ni tan bonito 💛\n\nEmpecé con ___ y hoy ___.\n\nSi tú también estás empezando: no estás sola. Paso a paso se llega 🙌\n\n#mamaemprendedora #emprendimiento"},
+  {b:"rominabravo.digital",t:"conectar",title:"Un día en mi vida",text:"Así es un día normal en mi vida de mamá emprendedora ☕👩‍💻👧👦\n\n7:00 – ___\n10:00 – ___\n15:00 – ___\n21:00 – ___\n\n¿Cómo es el tuyo? 👇\n\n(Ideal para video corto o carrusel de fotos)"},
+  {b:"rominabravo.digital",t:"educar",title:"3 apps que uso para mis redes",text:"3 herramientas que me ahorran horas en mis redes 📱\n\n1️⃣ ___ para diseñar\n2️⃣ ___ para editar videos\n3️⃣ Mi planificador para organizar todo en un calendario\n\nGuarda este post 📌\n\n#marketingdigital #emprendedoras"},
+  {b:"rominabravo.digital",t:"educar",title:"Error que cometí al empezar",text:"El error más grande que cometí al empezar en redes: publicar solo cuando me acordaba 🙈\n\nLo que me funcionó: planificar la semana un solo día y dejar todo listo.\n\n¿Te pasa lo mismo? 👇\n\n#redessociales #emprendimiento"},
+  {b:"rominabravo.digital",t:"interactuar",title:"Presentación de mis emprendimientos",text:"Hoy quiero presentarte todo lo que hago 🙌\n\n🏡 Asesoría en subsidios\n🌱 ___\n🛍️ ___\n\n¿Cuál no conocías? Cuéntame en los comentarios 👇"},
+
+  // Agro Aguachile
+  {b:"agroaguachile",t:"conectar",title:"Detrás de escena en el campo",text:"Así se ve un día de trabajo en el campo 🌱🚜\n\nCada producto que llega a tu mesa tiene detrás horas de dedicación y cariño.\n\n(Graba un video corto de 15 segundos mostrando el trabajo)\n\n#agro #productoslocales #delcampoatumesa"},
+  {b:"agroaguachile",t:"vender",title:"Disponible esta semana",text:"🌿 DISPONIBLE ESTA SEMANA 🌿\n\n• ___\n• ___\n• ___\n\n📍 Retiro en ___ / despacho a ___\n📩 Pedidos por mensaje directo\n\n#productosfrescos #comprolocal"},
+  {b:"agroaguachile",t:"educar",title:"Cómo elegir producto fresco",text:"¿Cómo saber si un producto está realmente fresco? 🥬\n\nTe damos 3 tips:\n1️⃣ ___\n2️⃣ ___\n3️⃣ ___\n\nGuárdalo para tu próxima compra 📌"},
+  {b:"agroaguachile",t:"interactuar",title:"Receta de la comunidad",text:"¿Qué preparas tú con ___? 🍽️\n\nDéjanos tu receta favorita en los comentarios y compartiremos las mejores en nuestras historias 👇"},
+
+  // Altos de Polcura
+  {b:"altos_depolcura",t:"conectar",title:"El paisaje que te espera",text:"Despertar con esta vista 🌄🌲\n\nAsí se vive en Altos de Polcura: naturaleza, tranquilidad y aire puro.\n\n(Usa tu mejor foto o video del lugar al amanecer o atardecer)\n\n#polcura #naturaleza #vidadecampo"},
+  {b:"altos_depolcura",t:"educar",title:"Qué hay cerca",text:"¿Qué encuentras cerca de Altos de Polcura? 📍\n\n🏞️ ___\n🛒 ___\n🚗 ___ minutos de ___\n\nGuarda este post si estás pensando en conocernos 📌"},
+  {b:"altos_depolcura",t:"vender",title:"Agenda una visita",text:"¿Te imaginas aquí? 🌲🏡\n\nAgenda tu visita y conoce Altos de Polcura en persona.\n\n📩 Escríbenos por mensaje directo.\n\n#polcura #biobio"},
+  {b:"altos_depolcura",t:"interactuar",title:"¿Campo o ciudad?",text:"Pregunta del día 👇\n\n🌲 Vida de campo\n🏙️ Vida de ciudad\n\n¿Con cuál te quedas y por qué?"},
+
+  // Sundry Shop
+  {b:"sundryshop4",t:"vender",title:"Producto estrella",text:"✨ PRODUCTO ESTRELLA ✨\n\n___\n\n💰 Precio: $___\n📦 Envíos a ___\n📩 Pídelo por mensaje directo\n\n#sundryshop #tiendaonline #emprendimientochileno"},
+  {b:"sundryshop4",t:"vender",title:"Llegaron productos nuevos",text:"¡Llegó lo nuevo! 🛍️😍\n\nDesliza para ver todo lo que llegó esta semana 👉\n\n¿Cuál es tu favorito? 👇\n\n(Ideal como carrusel con una foto por producto)"},
+  {b:"sundryshop4",t:"conectar",title:"Así preparamos tu pedido",text:"Así preparamos cada pedido con cariño 📦💛\n\n(Graba un video corto empacando un pedido de principio a fin)\n\n#sundryshop #pedidos #emprendimiento"},
+  {b:"sundryshop4",t:"interactuar",title:"Este o este",text:"¿Este 🅰️ o este 🅱️?\n\nVota en los comentarios 👇\n\n(Muestra dos productos lado a lado)"},
+  {b:"sundryshop4",t:"vender",title:"Idea de regalo",text:"¿No sabes qué regalar? 🎁\n\nTe dejamos 3 ideas de regalo desde $___:\n1️⃣ ___\n2️⃣ ___\n3️⃣ ___\n\n📩 Pide el tuyo por mensaje directo."},
+
+  // Cabañas Rapel Navidad
+  {b:"cabanasrapel",t:"vender",title:"Fechas disponibles",text:"🌊 FECHAS DISPONIBLES 🌊\n\nCabañas con piscina en Navidad, cerca del Lago Rapel.\n\n📅 ___\n📅 ___\n\nReserva por mensaje directo antes de que se ocupen ☀️\n\n#rapel #navidad #cabañas #vacaciones"},
+  {b:"cabanasrapel",t:"conectar",title:"Recorrido por la cabaña",text:"Ven a conocer nuestras cabañas 🏡🏊\n\n(Graba un video recorriendo la cabaña: entrada, piezas, cocina, terraza y piscina)\n\n¿Ya te imaginas aquí con tu familia? 💙"},
+  {b:"cabanasrapel",t:"educar",title:"Panoramas cerca",text:"¿Qué hacer cerca de nuestras cabañas? 🗺️\n\n🚤 ___\n🏖️ ___\n🍽️ ___\n\nGuarda este post para tus próximas vacaciones 📌\n\n#rapel #navidad #panoramas"},
+  {b:"cabanasrapel",t:"interactuar",title:"Etiqueta con quién vendrías",text:"Etiqueta a la persona con la que vendrías a descansar aquí 👇🌅\n\n(Usa tu mejor foto de la piscina o el atardecer)"},
+
+  // Cars Wash Pupuya
+  {b:"carswashpupuya",t:"vender",title:"Antes y después",text:"ANTES 😬 / DESPUÉS 😍\n\nAsí quedó este auto después de nuestro lavado.\n\n📍 Pupuya\n📩 Agenda tu hora por mensaje directo\n\n#carwash #pupuya #lavadodeautos\n\n(Pon las dos fotos lado a lado o haz un video corto)"},
+  {b:"carswashpupuya",t:"vender",title:"Lista de servicios y precios",text:"🚗 NUESTROS SERVICIOS 🚗\n\n• Lavado exterior – $___\n• Lavado completo – $___\n• Aspirado – $___\n\n📍 Pupuya\n🕐 Horario: ___\n\n#carwash #pupuya"},
+  {b:"carswashpupuya",t:"educar",title:"Cada cuánto lavar el auto",text:"¿Cada cuánto deberías lavar tu auto? 🤔\n\nSi vives cerca de la playa, la sal y la arena dañan la pintura más rápido 🌊\n\nTe recomendamos ___. ¡Nosotros te ayudamos!\n\n#carwash #cuidadodelauto"},
+  {b:"carswashpupuya",t:"interactuar",title:"Concurso: el auto más sucio",text:"🏆 CONCURSO: EL AUTO MÁS SUCIO 🏆\n\nComenta con una foto de tu auto más sucio 😂 El que tenga más reacciones gana un lavado gratis.\n\nTermina el ___"},
+];
+
+let ideasCustom = (()=>{ try{ return JSON.parse(localStorage.getItem(KEY+"-ideas"))||[]; }catch{ return []; } })();
+let ideasUsed = new Set((()=>{ try{ return JSON.parse(localStorage.getItem(KEY+"-ideasUsed"))||[]; }catch{ return []; } })());
+let ideaBrand = "", ideaType = "", ideaHideUsed = false;
+function saveIdeas(){ try{ localStorage.setItem(KEY+"-ideas",JSON.stringify(ideasCustom)); localStorage.setItem(KEY+"-ideasUsed",JSON.stringify([...ideasUsed])); }catch{} }
+function allIdeas(){ return IDEAS.map((x,i)=>({...x,id:"d"+i})).concat(ideasCustom); }
+
+function renderIdeas(main){
+  $("#title").textContent = "Banco de ideas";
+  const list = allIdeas().filter(x=>(!ideaBrand||x.b===ideaBrand)&&(!ideaType||x.t===ideaType)&&!(ideaHideUsed&&ideasUsed.has(x.id)));
+  const pill=(attr,val,cur,label,color)=>`<button class="net-btn ${cur===val?"on":""}" ${attr}="${esc(val)}" style="${cur===val?`background:${color};border-color:${color}`:""}">${label}</button>`;
+  main.innerHTML = `
+  <div class="idea-tip">💡 <b>Receta para una semana equilibrada:</b> por cada 5 posts, haz 2 para <b>enseñar</b>, 1 para <b>conectar</b>, 1 para <b>conversar</b> y solo 1 para <b>vender</b>. Así la gente te sigue por lo que aportas, y cuando vendes, te creen. Los espacios <b>___</b> son para que completes con tus datos.</div>
+  <div class="nets" style="margin:12px 0 6px">${pill("data-ib","",ideaBrand,"Todos","#1f1b1a")}${brands.map(b=>pill("data-ib",b.id,ideaBrand,esc(b.name),b.color)).join("")}</div>
+  <div class="nets" style="margin-bottom:14px;align-items:center">${pill("data-it","",ideaType,"Todo tipo","#1f1b1a")}${Object.entries(IDEA_TYPES).map(([k,v])=>pill("data-it",k,ideaType,v.icon+" "+v.label,"#e2725b")).join("")}
+    <label style="margin:0 0 0 8px;display:flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)"><input type="checkbox" id="hideUsed" style="width:auto" ${ideaHideUsed?"checked":""}> Ocultar las que ya usé</label>
+    <div class="spacer"></div><button class="primary" id="addIdea">+ Anotar mi idea</button></div>
+  <div class="idea-form" id="ideaForm">
+    <div class="row"><div><label>Emprendimiento</label><select id="iBrand">${brands.map(b=>`<option value="${esc(b.id)}">${esc(b.name)}</option>`).join("")}</select></div>
+    <div><label>Tipo</label><select id="iType">${Object.entries(IDEA_TYPES).map(([k,v])=>`<option value="${k}">${v.icon} ${v.label}</option>`).join("")}</select></div></div>
+    <label>Título corto</label><input id="iTitle" placeholder="Ej: Video del nuevo producto">
+    <label>Idea o borrador</label><textarea id="iText" style="min-height:90px" placeholder="Escribe tu idea, aunque sea a medias"></textarea>
+    <div class="actions"><button class="primary" id="iSave">Guardar idea</button><button id="iCancel">Cancelar</button></div>
+  </div>
+  <div class="ideas">${list.map(x=>{ const b=brands.find(y=>y.id===x.b), ty=IDEA_TYPES[x.t]||IDEA_TYPES.educar, used=ideasUsed.has(x.id);
+    return `<div class="idea ${used?"used":""}" style="border-top:4px solid ${b?b.color:"#ccc"}">
+      <div class="idea-top">${b?`<span class="brand-tag" style="background:${b.color}">${esc(b.name)}</span>`:""}<span class="idea-type">${ty.icon} ${ty.label}</span>${used?`<span class="idea-type">✅ Usada</span>`:""}</div>
+      <div class="idea-title">${esc(x.title)}</div>
+      <div class="idea-text">${esc(x.text)}</div>
+      <div class="idea-actions"><button class="primary" data-use="${x.id}">Usar esta idea</button>
+      ${x.id.startsWith("c")?`<button class="ghost danger" data-idel="${x.id}">Borrar</button>`:""}</div></div>`; }).join("") || `<div style="color:var(--muted)">No hay ideas con estos filtros.</div>`}</div>`;
+}
+
+function useIdea(id){
+  const x = allIdeas().find(i=>i.id===id); if(!x) return;
+  const b = brands.find(y=>y.id===x.b);
+  openEditor(null);
+  editing.text = x.text; editing.brand = x.b; editing.status = "idea"; editing.fromIdea = id;
+  editing.networks = b && !b.ig ? ["facebook"] : ["instagram","facebook"];
+  $("#fText").value = x.text; $("#fBrand").value = b ? x.b : ""; $("#fStatus").value = "idea";
+  pvTab = editing.networks[0]; renderNets(); updateCount(); renderPreview();
+  toast("Completa los ___, elige la fecha y guarda ✨");
+}
+
+$("#main").addEventListener("click", e=>{
+  if(view!=="ideas") return;
+  const t=e.target, g=s=>t.closest(s);
+  if(g("[data-ib]")){ ideaBrand=g("[data-ib]").dataset.ib; render(); }
+  else if(g("[data-it]")){ ideaType=g("[data-it]").dataset.it; render(); }
+  else if(g("[data-use]")) useIdea(g("[data-use]").dataset.use);
+  else if(g("[data-idel]")){ const id=g("[data-idel]").dataset.idel; ideasCustom=ideasCustom.filter(i=>i.id!==id); saveIdeas(); render(); }
+  else if(t.id==="addIdea"){ $("#ideaForm").classList.add("open"); if(ideaBrand) $("#iBrand").value=ideaBrand; $("#iTitle").focus(); }
+  else if(t.id==="iCancel") $("#ideaForm").classList.remove("open");
+  else if(t.id==="iSave"){ const title=$("#iTitle").value.trim(), text=$("#iText").value.trim();
+    if(!title&&!text){ toast("Escribe tu idea primero"); return; }
+    ideasCustom.unshift({id:"c"+uid(), b:$("#iBrand").value, t:$("#iType").value, title:title||text.slice(0,40), text}); saveIdeas(); render(); toast("Idea guardada 💡"); }
+});
+$("#main").addEventListener("change", e=>{ if(e.target.id==="hideUsed"){ ideaHideUsed=e.target.checked; render(); } });
+
 // Mis cuentas
 function renderAccounts(){
   $("#accList").innerHTML = brands.map((b,i)=>`<div class="acc-row" data-i="${i}">
@@ -530,6 +665,7 @@ $("#saveBtn").onclick=()=>{
   readForm();
   if(!editing.text.trim() && !editing.image){ toast("Escribe algo o sube una imagen"); return; }
   if(editing.brand) localStorage.setItem(KEY+"-lastBrand", editing.brand);
+  if(editing.fromIdea){ ideasUsed.add(editing.fromIdea); saveIdeas(); }
   if(editing.id){ posts = posts.map(p=>p.id===editing.id?editing:p); }
   else { editing.id=uid(); posts.push(editing); }
   if(editing.date){ cursor = new Date(editing.date+"T00:00"); }
